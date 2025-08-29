@@ -50,19 +50,6 @@ const ResumeEdit = () => {
     }
   }
 
-  const handleUpload = async (e) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    const formData = new FormData()
-    for (const file of files) formData.append('images', file)
-    try {
-      await axiosInstance.put(API_PATHS.RESUME.UPLOAD_IMAGES(id), formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-      alert('Images uploaded')
-    } catch (err) {
-      alert('Upload failed')
-    }
-  }
-
   const handleDownloadPdf = async () => {
     try {
       const res = await axiosInstance.get(API_PATHS.RESUME.DOWNLOAD_PDF(id), { responseType: 'blob' })
@@ -84,10 +71,6 @@ const ResumeEdit = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Edit Resume</h1>
         <div className="flex gap-2">
-          <label className="px-3 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 cursor-pointer">
-            Upload Images
-            <input type="file" multiple onChange={handleUpload} className="hidden" />
-          </label>
           <button onClick={handleDownloadPdf} className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700">Download PDF</button>
         </div>
       </div>

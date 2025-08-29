@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const generateToken = (userId) => {
-    const secret = process.env.JWT_SECRET || 'devsecret_change_me';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('Server misconfigured: JWT_SECRET missing');
+    }
     return jwt.sign({ id: userId }, secret, { expiresIn: "30d" });
 };
 

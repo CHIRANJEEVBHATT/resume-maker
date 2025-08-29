@@ -7,7 +7,10 @@ export const protect = async (req, res, next) => {
 
     if (token && token.startsWith("Bearer")) {
       token = token.split(" ")[1];
-      const secret = process.env.JWT_SECRET || 'devsecret_change_me';
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        return res.status(500).json({ message: "Server misconfigured: JWT_SECRET missing" });
+      }
       const decoded = jwt.verify(token, secret);
       req.user = await User.findById(decoded.id).select("-password");
       if (!req.user) {
