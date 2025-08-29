@@ -7,28 +7,23 @@ const generateToken = (userId) => {
     return jwt.sign({ id: userId }, secret, { expiresIn: "30d" });
 };
 
-// Register User
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Check if user already exists by email
         const userExist = await User.findOne({ email });
 
         if (userExist) {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        // Password validation
         if (!password || password.length < 8) {
             return res.status(400).json({ success: false, message: "Password should be at least 8 characters" });
         }
 
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create user
         const user = await User.create({
             name,
             email,
@@ -47,7 +42,6 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// Login User
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -75,7 +69,6 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// Get User Profile
 export const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select("-password");

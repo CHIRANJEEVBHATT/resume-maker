@@ -1,4 +1,3 @@
-// src/context/UserContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../config/apiPaths";
@@ -9,7 +8,6 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize from stored token
   useEffect(() => {
     const accessToken = localStorage.getItem("token");
     if (!accessToken) {
@@ -18,7 +16,7 @@ export const UserProvider = ({ children }) => {
     }
     fetchProfile();
   }, []);
-  // Fetch user profile if token exists
+
   const fetchProfile = async () => {
     try {
       const { data } = await axiosInstance.get(API_PATHS.AUTH.GET_PROFILE);
@@ -30,7 +28,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Login
   const login = async (credentials) => {
     try {
       const { data } = await axiosInstance.post(API_PATHS.AUTH.LOGIN, credentials);
@@ -44,7 +41,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Register
   const register = async (payload) => {
     try {
       const { data } = await axiosInstance.post(API_PATHS.AUTH.REGISTER, payload);
@@ -54,24 +50,22 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Update user profile
   const updateUser = async (payload) => {
     try {
       const { data } = await axiosInstance.put(API_PATHS.AUTH.UPDATE, payload);
-      setUser(data?.user || user); // update context with new user data
+      setUser(data?.user || user); 
       return data;
     } catch (error) {
       throw error;
     }
   };
 
-  // Logout
+  
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
   };
 
-  // Expose manual refresh via fetchProfile only; initial load handled above
 
   return (
     <UserContext.Provider
@@ -80,7 +74,7 @@ export const UserProvider = ({ children }) => {
         loading,
         login,
         register,
-        updateUser, // 🔥 new function here
+        updateUser, 
         logout,
         fetchProfile,
       }}

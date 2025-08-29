@@ -15,7 +15,6 @@ resumeRouter.put('/:id/upload-images' , protect , uploadResumeImages);
 
 resumeRouter.delete('/:id', protect ,deleteResume)
 
-// PDF generation
 resumeRouter.get('/:id/pdf', protect, getResumePdf)
 
 export default resumeRouter;

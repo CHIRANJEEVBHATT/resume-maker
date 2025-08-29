@@ -9,11 +9,7 @@ const connectDB = async () => {
       throw new Error("Missing MONGODB_URL in .env");
     }
 
-    // Normalize db name: ensure exactly one database segment and no extra slashes
-    // Examples fixed:
-    // - mongodb://localhost:27017/resum/        -> mongodb://localhost:27017/resume
-    // - mongodb://localhost:27017/resum/resume  -> mongodb://localhost:27017/resum
-    // - mongodb://localhost:27017/              -> mongodb://localhost:27017/resume
+    
     const match = uri.match(/^(mongodb(?:\+srv)?:\/\/[^/]+)(?:\/([^?]*))?(\?.*)?$/i);
     if (match) {
       const base = match[1];

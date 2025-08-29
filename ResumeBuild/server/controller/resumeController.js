@@ -1,9 +1,7 @@
 import Resume from "../models/resumeModel.js";
 import fs from 'fs'
 import path from 'path';
-// PDF generation is imported lazily inside the handler to avoid server crash if not installed
 
-// Map incoming frontend payload (personalInfo/contact) to model fields (profileInfo/contactInfo)
 const mapRequestToModel = (body) => {
   const mapped = { ...body }
   if (body.personalInfo) {
@@ -33,7 +31,6 @@ const mapRequestToModel = (body) => {
   return mapped
 }
 
-// Map model document back to frontend-friendly shape
 const mapModelToResponse = (doc) => {
   const obj = doc.toObject ? doc.toObject() : { ...doc }
   return {
@@ -61,9 +58,8 @@ export const createResume = async (req, res) => {
       return res.status(400).json({ success: false, message: "Title is required" });
     }
 
-    // Default Resume Template (based on your model)
     const defaultResume = {
-      userId: req.user.id,   // assumes JWT middleware sets req.user
+      userId: req.user.id,   
       title,
       thumbnailLink: "",
       template: "default",
@@ -152,17 +148,14 @@ export const updateResume = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find resume belonging to the logged-in user
     const resume = await Resume.findOne({ _id: id, userId: req.user._id });
     if (!resume) {
       return res.status(404).json({ success: false, message: "Resume not found" });
     }
 
-    // Merge request body (mapped) into resume document
     const mapped = mapRequestToModel(req.body)
     Object.assign(resume, mapped);
 
-    // Save updated resume
     const savedResume = await resume.save();
 
     res.status(200).json({
@@ -193,7 +186,6 @@ export const deleteResume = async (req, res) => {
 
     const uploadsFolder = path.join(process.cwd(), "uploads");
 
-    // Delete thumbnail if exists
     if (resume.thumbnailLink) {
       const oldThumbnail = path.join(
         uploadsFolder,
@@ -204,7 +196,6 @@ export const deleteResume = async (req, res) => {
       }
     }
 
-    // Delete profile picture if exists
     if (resume.profileInfo?.profilePreviewUrl) {
       const oldProfile = path.join(
         uploadsFolder,
@@ -215,7 +206,6 @@ export const deleteResume = async (req, res) => {
       }
     }
 
-    // Delete resume from DB
     const deleted = await Resume.findOneAndDelete({
       _id: req.params.id,
       userId: req.user._id,
@@ -242,7 +232,6 @@ export const getResumePdf = async (req, res) => {
     const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id })
     if (!resume) return res.status(404).json({ message: 'Resume not found' })
 
-    // Lazy import pdfkit; provide a helpful error if missing
     let PDFDocument
     try {
       ({ default: PDFDocument } = await import('pdfkit'))
@@ -253,17 +242,15 @@ export const getResumePdf = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'attachment; filename="resume.pdf"')
 
-    // Colors and document
     const palette = Array.isArray(resume.colorPalette) && resume.colorPalette.length >= 2
       ? { primary: resume.colorPalette[0], secondary: resume.colorPalette[1] }
-      : { primary: '#0EA5E9', secondary: '#64748B' } // sky-500, slate-500
+      : { primary: '#0EA5E9', secondary: '#64748B' } 
 
     const doc = new PDFDocument({ size: 'A4', margin: 50 })
     doc.pipe(res)
 
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
 
-    // Top banner
     const bannerH = 90
     const left = doc.page.margins.left
     const top = doc.page.margins.top
@@ -280,7 +267,6 @@ export const getResumePdf = async (req, res) => {
         .text(header.designation, left + 16, top + 48)
     }
 
-    // Body columns
     const bodyStartY = top + bannerH + 20
     const leftColX = left
     const leftColW = 180
@@ -311,7 +297,6 @@ export const getResumePdf = async (req, res) => {
       doc.moveDown(1.2)
     }
 
-    // LEFT COLUMN
     doc.x = leftColX; doc.y = bodyStartY
     const c = resume.contactInfo || {}
     if ([c.email, c.phone, c.location, c.github, c.website].some(Boolean)) {
@@ -331,7 +316,6 @@ export const getResumePdf = async (req, res) => {
       resume.language.forEach(l => drawSkillBar(l.name || 'Language', l.progress, leftColX, leftColW))
     }
 
-    // RIGHT COLUMN
     doc.x = rightColX; doc.y = bodyStartY
     if (header.summary) {
       sectionHeader('Summary', rightColX)

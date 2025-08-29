@@ -5,13 +5,12 @@ import upload from "../middleware/uploadMiddleware.js";
 
 export const uploadResumeImages = async (req, res) => {
   try {
-    // multer upload handler
+    
     const uploadHandler = upload.fields([
       { name: "thumbnail", maxCount: 1 },
       { name: "profileImage", maxCount: 1 },
     ]);
 
-    // run multer inside promise wrapper so we can use async/await
     uploadHandler(req, res, async (err) => {
       if (err) {
         return res.status(400).json({ success: false, message: err.message });
@@ -36,7 +35,6 @@ export const uploadResumeImages = async (req, res) => {
       const newThumbnail = req.files?.thumbnail ? req.files.thumbnail[0] : null;
       const newProfileImage = req.files?.profileImage ? req.files.profileImage[0] : null;
 
-      // === Thumbnail Upload ===
       if (newThumbnail) {
         if (resume.thumbnailLink) {
           const oldThumbnail = path.join(
@@ -49,7 +47,6 @@ export const uploadResumeImages = async (req, res) => {
         resume.thumbnailLink = `${baseUrl}/uploads/${newThumbnail.filename}`;
       }
 
-      // === Profile Image Upload ===
       if (newProfileImage) {
         if (resume.profileInfo?.profilePreviewUrl) {
           const oldProfile = path.join(
@@ -59,7 +56,6 @@ export const uploadResumeImages = async (req, res) => {
           if (fs.existsSync(oldProfile)) fs.unlinkSync(oldProfile);
         }
 
-        // ensure profileInfo exists
         if (!resume.profileInfo) resume.profileInfo = {};
         resume.profileInfo.profilePreviewUrl = `${baseUrl}/uploads/${newProfileImage.filename}`;
       }
