@@ -251,7 +251,9 @@ export const getResumePdf = async (req, res) => {
 
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
 
-    const bannerH = 90
+    // Footer and pageAdded handler removed to avoid runtime issues across pdfkit versions
+
+    const bannerH = 110
     const left = doc.page.margins.left
     const top = doc.page.margins.top
     doc.save()
@@ -260,18 +262,24 @@ export const getResumePdf = async (req, res) => {
       .restore()
 
     const header = resume.profileInfo || {}
-    doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(22)
-      .text(header.fullName || resume.title || 'Resume', left + 16, top + 18)
+    doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(26)
+      .text(header.fullName || resume.title || 'Resume', left + 16, top + 22)
     if (header.designation) {
-      doc.fillColor('#E5E7EB').font('Helvetica').fontSize(12)
-        .text(header.designation, left + 16, top + 48)
+      doc.fillColor('#E5E7EB').font('Helvetica').fontSize(13)
+        .text(header.designation, left + 16, top + 54)
     }
+    // Subtle accent line
+    doc.save().moveTo(left + 16, top + bannerH - 18).lineTo(left + 180, top + bannerH - 18).lineWidth(2).strokeColor('#FFFFFF').stroke().restore()
 
-    const bodyStartY = top + bannerH + 20
+    const bodyStartY = top + bannerH + 24
     const leftColX = left
     const leftColW = 180
     const rightColX = left + leftColW + 20
     const rightColW = pageWidth - leftColW - 20
+
+    // Sidebar background
+    const contentHeight = doc.page.height - bodyStartY - doc.page.margins.bottom
+    doc.save().rect(leftColX - 10, bodyStartY - 10, leftColW + 20, contentHeight + 20).fill('#F8FAFC').restore()
 
     const sectionHeader = (title, xPos, underlineW = 40) => {
       doc.fillColor(palette.primary).font('Helvetica-Bold').fontSize(12).text(title, xPos)
@@ -297,6 +305,16 @@ export const getResumePdf = async (req, res) => {
       doc.moveDown(1.2)
     }
 
+    const timelineItem = (title, subline, desc, x, width) => {
+      const circleY = doc.y + 4
+      doc.save().circle(x - 8, circleY, 2.2).fill(palette.primary).restore()
+      doc.save().moveTo(x - 8, circleY + 2.2).lineTo(x - 8, circleY + 40).lineWidth(1).strokeColor('#E2E8F0').stroke().restore()
+      doc.fillColor('#0F172A').font('Helvetica-Bold').fontSize(11).text(title, x, doc.y, { width })
+      if (subline) doc.fillColor(palette.secondary).font('Helvetica-Oblique').fontSize(9).text(subline, x, doc.y)
+      if (desc) doc.fillColor('#334155').font('Helvetica').fontSize(10).text(desc, x, doc.y, { width })
+      doc.moveDown(0.6)
+    }
+
     doc.x = leftColX; doc.y = bodyStartY
     const c = resume.contactInfo || {}
     if ([c.email, c.phone, c.location, c.github, c.website].some(Boolean)) {
@@ -320,35 +338,46 @@ export const getResumePdf = async (req, res) => {
     if (header.summary) {
       sectionHeader('Summary', rightColX)
       doc.fillColor('#334155').font('Helvetica').fontSize(10).text(header.summary, { width: rightColW })
+      doc.moveDown(0.2)
+      doc.save().moveTo(rightColX, doc.y).lineTo(rightColX + rightColW, doc.y).lineWidth(1).strokeColor('#E2E8F0').stroke().restore()
+      doc.moveDown(0.6)
+    }
+
+    const formatDate = (value) => {
+      if (!value) return ''
+      const d = new Date(value)
+      if (isNaN(d.getTime())) return ''
+      try { return d.toLocaleDateString() } catch (_) { return '' }
     }
 
     if (Array.isArray(resume.workExperience) && resume.workExperience.length) {
       sectionHeader('Work Experience', rightColX)
       resume.workExperience.forEach(w => {
         const title = `${w.position || ''}${w.company ? ' @ ' + w.company : ''}`
-        doc.fillColor('#0F172A').font('Helvetica-Bold').fontSize(11).text(title, rightColX)
-        if (w.startDate || w.endDate) {
-          const d1 = w.startDate ? new Date(w.startDate).toLocaleDateString() : ''
-          const d2 = w.endDate ? new Date(w.endDate).toLocaleDateString() : 'Present'
-          doc.fillColor(palette.secondary).font('Helvetica-Oblique').fontSize(9).text(`${d1} - ${d2}`, rightColX)
-        }
-        if (w.description) {
-          doc.fillColor('#334155').font('Helvetica').fontSize(10).text(w.description, { width: rightColW })
-        }
-        doc.moveDown(0.6)
+        const dates = (() => {
+          if (w.startDate || w.endDate) {
+            const d1 = formatDate(w.startDate)
+            const d2 = w.endDate ? formatDate(w.endDate) : 'Present'
+            return `${d1} - ${d2}`
+          }
+          return ''
+        })()
+        timelineItem(title, dates, w.description, rightColX, rightColW)
       })
+      doc.moveDown(0.2)
+      doc.save().moveTo(rightColX, doc.y).lineTo(rightColX + rightColW, doc.y).lineWidth(1).strokeColor('#E2E8F0').stroke().restore()
+      doc.moveDown(0.6)
     }
 
     if (Array.isArray(resume.education) && resume.education.length) {
       sectionHeader('Education', rightColX)
       resume.education.forEach(e => {
-        const line = `${e.degree || ''}${e.institution ? ' - ' + e.institution : ''}`
-        doc.fillColor('#0F172A').font('Helvetica-Bold').fontSize(11).text(line, rightColX)
-        const d1 = e.startDate ? new Date(e.startDate).toLocaleDateString() : ''
-        const d2 = e.endDate ? new Date(e.endDate).toLocaleDateString() : ''
-        if (d1 || d2) doc.fillColor(palette.secondary).font('Helvetica-Oblique').fontSize(9).text(`${d1} ${d1 && d2 ? '-' : ''} ${d2}`, rightColX)
-        if (e.grade) doc.fillColor('#334155').font('Helvetica').fontSize(10).text(`Grade: ${e.grade}`, rightColX)
-        doc.moveDown(0.6)
+        const title = `${e.degree || ''}${e.institution ? ' - ' + e.institution : ''}`
+        const d1 = e.startDate ? formatDate(e.startDate) : ''
+        const d2 = e.endDate ? formatDate(e.endDate) : ''
+        const dates = (d1 || d2) ? `${d1}${d1 && d2 ? ' - ' : ''}${d2}` : ''
+        const desc = e.grade ? `Grade: ${e.grade}` : ''
+        timelineItem(title, dates, desc, rightColX, rightColW)
       })
     }
 
@@ -368,7 +397,10 @@ export const getResumePdf = async (req, res) => {
       resume.certifications.forEach(c => {
         const line = `${c.name || ''}${c.organization ? ' - ' + c.organization : ''}`
         doc.fillColor('#0F172A').font('Helvetica-Bold').fontSize(11).text(line, rightColX)
-        if (c.issueDate) doc.fillColor(palette.secondary).font('Helvetica-Oblique').fontSize(9).text(new Date(c.issueDate).toLocaleDateString(), rightColX)
+        if (c.issueDate) {
+          const fd = formatDate(c.issueDate)
+          if (fd) doc.fillColor(palette.secondary).font('Helvetica-Oblique').fontSize(9).text(fd, rightColX)
+        }
         doc.moveDown(0.4)
       })
     }

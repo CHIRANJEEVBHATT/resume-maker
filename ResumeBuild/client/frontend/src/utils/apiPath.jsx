@@ -14,7 +14,7 @@ export const API_PATHS = {
     GET_BY_ID: (id) => `/api/resume/${id}`,
     UPDATE: (id) => `/api/resume/${id}`,
     DELETE: (id) => `/api/resume/${id}`,
-    
+    // Upload images feature removed
   },
   
 };

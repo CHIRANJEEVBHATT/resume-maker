@@ -8,7 +8,6 @@ export const API_PATHS = {
     LOGIN: "/api/auth/login",
     GET_PROFILE: "/api/auth/profile",
     UPDATE: "/api/auth/update",
-    
   },
   RESUME: {
     CREATE: "/api/resume",
@@ -16,7 +15,7 @@ export const API_PATHS = {
     GET_BY_ID: (id) => `/api/resume/${id}`,
     UPDATE: (id) => `/api/resume/${id}`,
     DELETE: (id) => `/api/resume/${id}`,
-    
+    // Upload images feature removed
     DOWNLOAD_PDF: (id) => `/api/resume/${id}/pdf`,
   },
 };

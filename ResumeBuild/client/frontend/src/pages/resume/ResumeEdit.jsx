@@ -50,6 +50,8 @@ const ResumeEdit = () => {
     }
   }
 
+  // Upload feature removed
+
   const handleDownloadPdf = async () => {
     try {
       const res = await axiosInstance.get(API_PATHS.RESUME.DOWNLOAD_PDF(id), { responseType: 'blob' })
@@ -71,6 +73,7 @@ const ResumeEdit = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Edit Resume</h1>
         <div className="flex gap-2">
+          {/* Upload Images feature removed */}
           <button onClick={handleDownloadPdf} className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700">Download PDF</button>
         </div>
       </div>

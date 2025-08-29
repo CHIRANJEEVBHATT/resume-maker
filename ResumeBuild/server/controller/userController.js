@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 const generateToken = (userId) => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-        throw new Error('Server misconfigured: JWT_SECRET missing');
+        throw new Error('Server misconfiguration: missing JWT_SECRET');
     }
     return jwt.sign({ id: userId }, secret, { expiresIn: "30d" });
 };
