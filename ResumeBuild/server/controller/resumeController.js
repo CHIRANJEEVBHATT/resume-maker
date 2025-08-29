@@ -251,7 +251,6 @@ export const getResumePdf = async (req, res) => {
 
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
 
-    // Footer and pageAdded handler removed to avoid runtime issues across pdfkit versions
 
     const bannerH = 110
     const left = doc.page.margins.left
